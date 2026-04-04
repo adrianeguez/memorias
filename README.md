@@ -8,6 +8,37 @@ Everything you do here is contained within this one codespace. There is no repos
 
 This project was bootstrapped for you with [Vite](https://vitejs.dev/).
 
+## MVP The Archive
+
+Esta version implementa un MVP mobile-first para:
+
+- Login con Google
+- Seleccion de carpeta en Drive
+- Creacion y lectura de recuerdos diarios en Google Sheets
+- Timeline mensual y vista semanal
+
+### Variables de entorno
+
+Crear un archivo `.env` a partir de `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Completar:
+
+```bash
+VITE_GOOGLE_CLIENT_ID=<tu_google_oauth_web_client_id>
+```
+
+### Calidad de codigo
+
+```bash
+npm test -- --run
+npm run build
+npm run lint
+```
+
 ## Available Scripts
 
 In the project directory, you can run:

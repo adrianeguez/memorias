@@ -72,6 +72,9 @@ typings/
 .env
 .env.test
 
+# Local VS Code MCP config may contain API keys
+.vscode/mcp.json
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 

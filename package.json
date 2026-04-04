@@ -1,5 +1,5 @@
 {
-  "name": "codespaces-react",
+  "name": "memorias",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -20,7 +20,8 @@
     "start": "BROWSER=none WDS_SOCKET_PORT=0 vite --port 3000",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "eslint src --ext js,jsx,ts,tsx"
   },
   "eslintConfig": {
     "extends": [
@@ -41,8 +42,19 @@
     ]
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.58.0",
+    "@typescript-eslint/parser": "^8.58.0",
     "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.4.0",
     "jsdom": "^26.1.0",
+    "typescript": "^6.0.2",
     "vite": "^6.3.6",
     "vitest": "^3.0.7"
   }
