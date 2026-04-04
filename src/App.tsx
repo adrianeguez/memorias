@@ -358,8 +358,9 @@ function App() {
 
       const data = await listMonthlyMemories(token, folderId, year, month);
       setMemories(sortMemoriesPresentToPast(data));
-    } catch {
-      setSaveError('No fue posible guardar el recuerdo. Reintenta.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      setSaveError(message ? `No fue posible guardar el recuerdo. ${message}` : 'No fue posible guardar el recuerdo. Reintenta.');
     } finally {
       setIsSaving(false);
     }
@@ -532,7 +533,6 @@ function App() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              maxLength={500}
             />
 
             <label htmlFor="files">Fotos o videos (máx. 5)</label>

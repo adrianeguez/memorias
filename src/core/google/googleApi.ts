@@ -146,7 +146,7 @@ async function listDateNamedSheets(token: string, folderId: string): Promise<Goo
 }
 
 async function readSheetRows(token: string, spreadsheetId: string): Promise<string[][]> {
-  const range = encodeURIComponent('Memories!A2:I');
+  const range = encodeURIComponent('A2:I');
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`;
   const data = await googleFetch<GoogleSheetValuesResponse>(url, token);
   return data.values || [];
@@ -232,7 +232,7 @@ async function createSpreadsheetInFolder(token: string, folderId: string, dateKe
   );
 
   await googleFetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${file.id}/values/${encodeURIComponent('Memories!A1:I1')}`,
+    `https://sheets.googleapis.com/v4/spreadsheets/${file.id}/values/${encodeURIComponent('A1:I1')}`,
     token,
     {
       method: 'PUT',
@@ -342,7 +342,7 @@ export async function appendMemoryRow(
   row.push(now);
 
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
-    'Memories!A2:I'
+    'A2:I'
   )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
 
   await googleFetch(url, token, {
