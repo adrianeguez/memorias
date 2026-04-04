@@ -222,11 +222,14 @@ select {
   background: rgba(25, 18, 12, 0.35);
   display: grid;
   place-items: end center;
-  padding: 1rem;
+  padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  z-index: 30;
 }
 
 .dialog {
   width: min(520px, 100%);
+  max-height: calc(100vh - 2rem - env(safe-area-inset-bottom));
+  overflow: auto;
   background: #fff;
   border-radius: 1.2rem;
   padding: 1rem;
@@ -256,6 +259,7 @@ select {
   grid-template-columns: repeat(3, 1fr);
   gap: 0.45rem;
   box-sizing: border-box;
+  z-index: 20;
 }
 
 .bottom-nav button {
