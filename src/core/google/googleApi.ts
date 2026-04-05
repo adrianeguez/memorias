@@ -241,7 +241,7 @@ async function createSpreadsheetInFolder(token: string, folderId: string, dateKe
   );
 
   await googleFetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${file.id}/values/${encodeURIComponent('A1:I1')}`,
+    `https://sheets.googleapis.com/v4/spreadsheets/${file.id}/values/${encodeURIComponent('A1:I1')}?valueInputOption=RAW`,
     token,
     {
       method: 'PUT',
@@ -365,7 +365,7 @@ export async function appendMemoryRow(
 
   row.push(now);
 
-  const headerUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('A1:I1')}`;
+  const headerUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('A1:I1')}?valueInputOption=RAW`;
   const headerData = await googleFetch<GoogleSheetValuesResponse>(headerUrl, token);
   const currentHeader = headerData.values?.[0] || [];
   if (!currentHeader.length || currentHeader[0] !== 'id') {
@@ -382,7 +382,7 @@ export async function appendMemoryRow(
   const rowsData = await googleFetch<GoogleSheetValuesResponse>(rowsUrl, token);
   const nextRowNumber = 2 + (rowsData.values?.length || 0);
   const writeRange = encodeURIComponent(`A${nextRowNumber}:I${nextRowNumber}`);
-  const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${writeRange}?valueInputOption=RAW`;
+  const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${writeRange}?valueInputOption=RAW&includeValuesInResponse=false`;
 
   await googleFetch(writeUrl, token, {
     method: 'PUT',
