@@ -617,9 +617,18 @@ function App() {
                         key={url}
                         url={url}
                         token={token}
-                        onOpen={() => openMediaViewer(memory.urls.slice(0, 2), index)}
+                        onOpen={() => openMediaViewer(memory.urls, index)}
                       />
                     ))}
+                    {memory.urls.length > 2 ? (
+                      <button
+                        className="asset-more-btn"
+                        type="button"
+                        onClick={() => openMediaViewer(memory.urls, 2)}
+                      >
+                        +{memory.urls.length - 2} más
+                      </button>
+                    ) : null}
                   </div>
                 ) : null}
               </article>

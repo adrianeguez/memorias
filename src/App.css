@@ -199,6 +199,21 @@ select {
   height: min(62vh, 480px);
 }
 
+.asset-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  border-radius: 0.8rem;
+  background: #e8e4dd;
+  color: #5f4f3c;
+  font-weight: 700;
+  font-size: 1.05rem;
+  border: 0;
+  cursor: pointer;
+  width: 100%;
+}
+
 .asset-plain-button {
   border: 0;
   background: transparent;
