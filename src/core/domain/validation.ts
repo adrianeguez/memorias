@@ -29,8 +29,8 @@ export function validateMemoryInput({ title, description, files }: MemoryInput):
       errors.push(`Tipo no permitido: ${file.name}`);
     }
 
-    if (file.size > 30 * 1024 * 1024) {
-      errors.push(`Archivo demasiado grande (max 30MB): ${file.name}`);
+    if (file.size > 500 * 1024 * 1024) {
+      errors.push(`Archivo demasiado grande (max 500MB): ${file.name}`);
     }
   }
 
