@@ -24,6 +24,7 @@ type AppView = 'setup' | 'timeline' | 'week' | 'create';
 
 interface MediaPreviewProps {
   url: string;
+  token: string;
 }
 
 interface GoogleTokenResponse {
@@ -62,6 +63,7 @@ const MONTH_NAMES = [
 const currentDate = new Date();
 const currentYear = currentDate.getFullYear();
 const yearOptions = Array.from({ length: 6 }, (_, i) => currentYear - i);
+const MAX_DESCRIPTION_PREVIEW = 600;
 
 function getDriveId(url: string): string {
   if (!url) return '';
@@ -81,9 +83,63 @@ function getKindFromUrl(url: string): string {
   }
 }
 
-function MediaPreview({ url }: MediaPreviewProps) {
+function getPreviewDescription(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= MAX_DESCRIPTION_PREVIEW) return trimmed;
+  return `${trimmed.slice(0, MAX_DESCRIPTION_PREVIEW).trimEnd()}...`;
+}
+
+function MediaPreview({ url, token }: MediaPreviewProps) {
   const id = getDriveId(url);
   const kind = getKindFromUrl(url);
+  const [blobUrl, setBlobUrl] = useState('');
+  const [failedToLoad, setFailedToLoad] = useState(false);
+
+  useEffect(() => {
+    if (!id || kind !== 'image' || !token) {
+      setBlobUrl('');
+      setFailedToLoad(false);
+      return;
+    }
+
+    let isMounted = true;
+    let objectUrl = '';
+
+    async function loadImage() {
+      try {
+        setFailedToLoad(false);
+        const response = await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('No se pudo descargar imagen desde Drive.');
+        }
+
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+        if (isMounted) {
+          setBlobUrl(objectUrl);
+        }
+      } catch {
+        if (isMounted) {
+          setFailedToLoad(true);
+          setBlobUrl('');
+        }
+      }
+    }
+
+    loadImage();
+
+    return () => {
+      isMounted = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [id, kind, token]);
 
   if (!id) {
     return (
@@ -94,12 +150,28 @@ function MediaPreview({ url }: MediaPreviewProps) {
   }
 
   if (kind === 'image') {
+    if (blobUrl) {
+      return (
+        <img
+          className="asset-image"
+          src={blobUrl}
+          alt="Recuerdo"
+        />
+      );
+    }
+
+    if (failedToLoad) {
+      return (
+        <a className="asset-link" href={url} target="_blank" rel="noreferrer">
+          Abrir imagen en Drive
+        </a>
+      );
+    }
+
     return (
-      <img
-        className="asset-image"
-        src={`https://drive.google.com/uc?export=view&id=${id}`}
-        alt="Recuerdo"
-      />
+      <div className="asset-link" aria-label="Cargando imagen">
+        Cargando imagen...
+      </div>
     );
   }
 
@@ -153,6 +225,7 @@ function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [saveError, setSaveError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [expandedMemory, setExpandedMemory] = useState<MemoryRecord | null>(null);
 
   const tokenClientRef = useRef<GoogleTokenClient | null>(null);
 
@@ -473,11 +546,16 @@ function App() {
                   </button>
                 </div>
                 <h3>{memory.title}</h3>
-                <p>{memory.description}</p>
+                <p>{getPreviewDescription(memory.description)}</p>
+                {memory.description.trim().length > MAX_DESCRIPTION_PREVIEW ? (
+                  <button className="tiny" type="button" onClick={() => setExpandedMemory(memory)}>
+                    Leer completo
+                  </button>
+                ) : null}
                 {memory.urls.length ? (
                   <div className="asset-grid">
                     {memory.urls.slice(0, 2).map((url) => (
-                      <MediaPreview key={url} url={url} />
+                      <MediaPreview key={url} url={url} token={token} />
                     ))}
                   </div>
                 ) : null}
@@ -506,11 +584,16 @@ function App() {
               {items.map((memory) => (
                 <article key={memory.uniqueKey} className="memory-item">
                   <h4>{memory.title}</h4>
-                  <p>{memory.description}</p>
+                  <p>{getPreviewDescription(memory.description)}</p>
+                  {memory.description.trim().length > MAX_DESCRIPTION_PREVIEW ? (
+                    <button className="tiny" type="button" onClick={() => setExpandedMemory(memory)}>
+                      Leer completo
+                    </button>
+                  ) : null}
                   {memory.urls.length ? (
                     <div className="asset-grid">
                       {memory.urls.map((url) => (
-                        <MediaPreview key={url} url={url} />
+                        <MediaPreview key={url} url={url} token={token} />
                       ))}
                     </div>
                   ) : null}
@@ -595,6 +678,21 @@ function App() {
                 Aplicar
               </button>
               <button className="ghost" type="button" onClick={() => setShowFilters(false)}>
+                Cerrar
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {expandedMemory ? (
+        <div className="dialog-backdrop" role="dialog" aria-modal="true" onClick={() => setExpandedMemory(null)}>
+          <section className="dialog" onClick={(event) => event.stopPropagation()}>
+            <h3>{expandedMemory.title}</h3>
+            <p className="meta">{expandedMemory.dateKey}</p>
+            <p className="full-description">{expandedMemory.description}</p>
+            <div className="dialog-actions">
+              <button className="primary" type="button" onClick={() => setExpandedMemory(null)}>
                 Cerrar
               </button>
             </div>

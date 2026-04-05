@@ -65,6 +65,13 @@
   line-height: 1.45;
 }
 
+.full-description {
+  white-space: pre-wrap;
+  max-height: 52vh;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
 .memory-head {
   display: flex;
   justify-content: space-between;

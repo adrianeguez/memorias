@@ -153,7 +153,14 @@ async function readSheetRows(token: string, spreadsheetId: string): Promise<stri
 }
 
 function rowsToMemories(rows: string[][], dateKey: string, sheetId: string): MemoryRecord[] {
-  return rows.map((row, index) => {
+  return rows
+    .filter((row) => {
+      const title = row[1]?.trim();
+      const description = row[2]?.trim();
+      const hasUrls = row.slice(3, 8).some((value) => Boolean(value));
+      return Boolean(title || description || hasUrls);
+    })
+    .map((row, index) => {
     const urls = row.slice(3, 8).filter(Boolean);
     return {
       uniqueKey: `${sheetId}-${row[0] || index}`,
@@ -165,7 +172,7 @@ function rowsToMemories(rows: string[][], dateKey: string, sheetId: string): Mem
       createdAtIso: row[8] || '',
       sheetId,
     };
-  });
+    });
 }
 
 export async function listMonthlyMemories(
@@ -301,6 +308,21 @@ async function uploadSingleFile(token: string, folderId: string, file: File, tod
     }
   );
 
+  await googleFetch(
+    `https://www.googleapis.com/drive/v3/files/${data.id}/permissions`,
+    token,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        role: 'reader',
+        type: 'anyone',
+      }),
+    }
+  );
+
   const kind = data.mimeType?.startsWith('video/') ? 'video' : 'image';
   return `https://drive.google.com/file/d/${data.id}/view?kind=${kind}`;
 }
@@ -343,7 +365,7 @@ export async function appendMemoryRow(
 
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
     'A2:I'
-  )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  )}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
 
   await googleFetch(url, token, {
     method: 'POST',
