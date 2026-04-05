@@ -424,8 +424,14 @@ function App() {
     }
   }
 
-  async function handleSaveMemory(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function goToCreate() {
+    setShowFilters(false);
+    setExpandedMemory(null);
+    setMediaViewer(null);
+    setView('create');
+  }
+
+  async function saveMemory() {
     setSaveError('');
 
     const validation = validateMemoryInput({ title, description, files });
@@ -467,6 +473,11 @@ function App() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function handleSaveMemorySubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void saveMemory();
   }
 
   function openMediaViewer(urls: string[], index: number) {
@@ -556,6 +567,9 @@ function App() {
       {view === 'timeline' ? (
         <main className="page">
           <section className="filters-row">
+            <button className="primary" type="button" onClick={goToCreate}>
+              Nuevo recuerdo
+            </button>
             <button className="ghost" type="button" onClick={() => setShowFilters(true)}>
               Filtrar mes/año
             </button>
@@ -660,7 +674,7 @@ function App() {
 
       {view === 'create' ? (
         <main className="page">
-          <form className="card" onSubmit={handleSaveMemory}>
+          <form className="card" onSubmit={handleSaveMemorySubmit}>
             <label htmlFor="title">Título</label>
             <input id="title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} />
 
@@ -683,7 +697,7 @@ function App() {
             <p className="meta">Seleccionados: {files.length}</p>
 
             {saveError ? <p className="error">{saveError}</p> : null}
-            <button className="primary" type="submit" disabled={isSaving}>
+            <button className="primary" type="button" disabled={isSaving} onClick={() => void saveMemory()}>
               {isSaving ? 'Guardando...' : 'Guardar Recuerdo'}
             </button>
             <button className="ghost" type="button" onClick={() => setView('timeline')}>
@@ -787,7 +801,7 @@ function App() {
         <button className={view === 'timeline' ? 'active' : ''} type="button" onClick={() => setView('timeline')}>
           Timeline
         </button>
-        <button className={view === 'create' ? 'active' : ''} type="button" onClick={() => setView('create')}>
+        <button className={view === 'create' ? 'active' : ''} type="button" onClick={goToCreate}>
           Crear
         </button>
         <button className={view === 'week' ? 'active' : ''} type="button" onClick={() => setView('week')}>
