@@ -365,11 +365,12 @@ export async function appendMemoryRow(
 
   row.push(now);
 
-  const headerUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('A1:I1')}?valueInputOption=RAW`;
-  const headerData = await googleFetch<GoogleSheetValuesResponse>(headerUrl, token);
+  const headerReadUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('A1:I1')}`;
+  const headerData = await googleFetch<GoogleSheetValuesResponse>(headerReadUrl, token);
   const currentHeader = headerData.values?.[0] || [];
   if (!currentHeader.length || currentHeader[0] !== 'id') {
-    await googleFetch(headerUrl, token, {
+    const headerWriteUrl = `${headerReadUrl}?valueInputOption=RAW`;
+    await googleFetch(headerWriteUrl, token, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
