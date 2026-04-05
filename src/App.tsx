@@ -25,6 +25,13 @@ type AppView = 'setup' | 'timeline' | 'week' | 'create';
 interface MediaPreviewProps {
   url: string;
   token: string;
+  onOpen?: () => void;
+  variant?: 'grid' | 'viewer';
+}
+
+interface MediaViewerState {
+  urls: string[];
+  index: number;
 }
 
 interface GoogleTokenResponse {
@@ -89,11 +96,13 @@ function getPreviewDescription(text: string): string {
   return `${trimmed.slice(0, MAX_DESCRIPTION_PREVIEW).trimEnd()}...`;
 }
 
-function MediaPreview({ url, token }: MediaPreviewProps) {
+function MediaPreview({ url, token, onOpen, variant = 'grid' }: MediaPreviewProps) {
   const id = getDriveId(url);
   const kind = getKindFromUrl(url);
   const [blobUrl, setBlobUrl] = useState('');
   const [failedToLoad, setFailedToLoad] = useState(false);
+  const imageClassName = variant === 'viewer' ? 'asset-image asset-image-viewer' : 'asset-image';
+  const videoClassName = variant === 'viewer' ? 'asset-video asset-video-viewer' : 'asset-video';
 
   useEffect(() => {
     if (!id || kind !== 'image' || !token) {
@@ -151,9 +160,21 @@ function MediaPreview({ url, token }: MediaPreviewProps) {
 
   if (kind === 'image') {
     if (blobUrl) {
+      if (onOpen) {
+        return (
+          <button className="asset-plain-button" type="button" onClick={onOpen} aria-label="Ver imagen en carrusel">
+            <img
+              className={imageClassName}
+              src={blobUrl}
+              alt="Recuerdo"
+            />
+          </button>
+        );
+      }
+
       return (
         <img
-          className="asset-image"
+          className={imageClassName}
           src={blobUrl}
           alt="Recuerdo"
         />
@@ -176,9 +197,17 @@ function MediaPreview({ url, token }: MediaPreviewProps) {
   }
 
   if (kind === 'video') {
+    if (onOpen) {
+      return (
+        <button className="asset-link asset-plain-button" type="button" onClick={onOpen}>
+          Ver video
+        </button>
+      );
+    }
+
     return (
       <iframe
-        className="asset-video"
+        className={videoClassName}
         src={`https://drive.google.com/file/d/${id}/preview`}
         allow="autoplay"
         title="Video del recuerdo"
@@ -226,6 +255,7 @@ function App() {
   const [saveError, setSaveError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [expandedMemory, setExpandedMemory] = useState<MemoryRecord | null>(null);
+  const [mediaViewer, setMediaViewer] = useState<MediaViewerState | null>(null);
 
   const tokenClientRef = useRef<GoogleTokenClient | null>(null);
 
@@ -439,6 +469,20 @@ function App() {
     }
   }
 
+  function openMediaViewer(urls: string[], index: number) {
+    if (!urls.length) return;
+    const safeIndex = Math.min(Math.max(index, 0), urls.length - 1);
+    setMediaViewer({ urls, index: safeIndex });
+  }
+
+  function moveMediaViewer(direction: -1 | 1) {
+    setMediaViewer((prev) => {
+      if (!prev || prev.urls.length === 0) return prev;
+      const nextIndex = (prev.index + direction + prev.urls.length) % prev.urls.length;
+      return { ...prev, index: nextIndex };
+    });
+  }
+
   const hasSetupDone = token && folderId;
 
   return (
@@ -554,8 +598,13 @@ function App() {
                 ) : null}
                 {memory.urls.length ? (
                   <div className="asset-grid">
-                    {memory.urls.slice(0, 2).map((url) => (
-                      <MediaPreview key={url} url={url} token={token} />
+                    {memory.urls.slice(0, 2).map((url, index) => (
+                      <MediaPreview
+                        key={url}
+                        url={url}
+                        token={token}
+                        onOpen={() => openMediaViewer(memory.urls.slice(0, 2), index)}
+                      />
                     ))}
                   </div>
                 ) : null}
@@ -592,8 +641,13 @@ function App() {
                   ) : null}
                   {memory.urls.length ? (
                     <div className="asset-grid">
-                      {memory.urls.map((url) => (
-                        <MediaPreview key={url} url={url} token={token} />
+                      {memory.urls.map((url, index) => (
+                        <MediaPreview
+                          key={url}
+                          url={url}
+                          token={token}
+                          onOpen={() => openMediaViewer(memory.urls, index)}
+                        />
                       ))}
                     </div>
                   ) : null}
@@ -693,6 +747,35 @@ function App() {
             <p className="full-description">{expandedMemory.description}</p>
             <div className="dialog-actions">
               <button className="primary" type="button" onClick={() => setExpandedMemory(null)}>
+                Cerrar
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {mediaViewer ? (
+        <div className="dialog-backdrop" role="dialog" aria-modal="true" onClick={() => setMediaViewer(null)}>
+          <section className="dialog media-dialog" onClick={(event) => event.stopPropagation()}>
+            <h3>Multimedia del recuerdo</h3>
+            <p className="meta">
+              {mediaViewer.index + 1} de {mediaViewer.urls.length}
+            </p>
+
+            <MediaPreview
+              url={mediaViewer.urls[mediaViewer.index]}
+              token={token}
+              variant="viewer"
+            />
+
+            <div className="dialog-actions">
+              <button className="ghost" type="button" onClick={() => moveMediaViewer(-1)}>
+                Anterior
+              </button>
+              <button className="ghost" type="button" onClick={() => moveMediaViewer(1)}>
+                Siguiente
+              </button>
+              <button className="primary" type="button" onClick={() => setMediaViewer(null)}>
                 Cerrar
               </button>
             </div>

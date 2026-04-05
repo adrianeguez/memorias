@@ -194,6 +194,18 @@ select {
   background: #e8e5df;
 }
 
+.asset-image-viewer,
+.asset-video-viewer {
+  height: min(62vh, 480px);
+}
+
+.asset-plain-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+}
+
 .asset-link {
   display: inline-flex;
   align-items: center;
@@ -251,6 +263,10 @@ select {
   display: flex;
   gap: 0.5rem;
   margin-top: 0.9rem;
+}
+
+.media-dialog {
+  max-width: 640px;
 }
 
 .bottom-nav {

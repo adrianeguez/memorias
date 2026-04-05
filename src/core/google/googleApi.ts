@@ -41,6 +41,8 @@ export interface AppendMemoryPayload {
   urls: string[];
 }
 
+const SHEET_HEADERS = ['id', 'title', 'description', 'url1', 'url2', 'url3', 'url4', 'url5', 'createdAtIso'];
+
 let identityScriptPromise: Promise<void> | undefined;
 
 const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
@@ -363,15 +365,31 @@ export async function appendMemoryRow(
 
   row.push(now);
 
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
-    'A2:I'
-  )}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
+  const headerUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('A1:I1')}`;
+  const headerData = await googleFetch<GoogleSheetValuesResponse>(headerUrl, token);
+  const currentHeader = headerData.values?.[0] || [];
+  if (!currentHeader.length || currentHeader[0] !== 'id') {
+    await googleFetch(headerUrl, token, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ values: [SHEET_HEADERS] }),
+    });
+  }
 
-  await googleFetch(url, token, {
-    method: 'POST',
+  const rowsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('A2:I')}`;
+  const rowsData = await googleFetch<GoogleSheetValuesResponse>(rowsUrl, token);
+  const nextRowNumber = 2 + (rowsData.values?.length || 0);
+  const writeRange = encodeURIComponent(`A${nextRowNumber}:I${nextRowNumber}`);
+  const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${writeRange}?valueInputOption=RAW`;
+
+  await googleFetch(writeUrl, token, {
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ values: [row] }),
   });
+
 }
